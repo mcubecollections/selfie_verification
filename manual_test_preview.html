@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview Feature Manual Test Guide</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 { color: #2563eb; }
+    h2 { color: #059669; margin-top: 30px; }
+    .test-case {
+      background: #f9fafb;
+      border-left: 4px solid #2563eb;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    .expected {
+      background: #ecfdf5;
+      border-left: 4px solid #059669;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    .step {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+    code {
+      background: #e5e7eb;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+    .checklist {
+      list-style: none;
+      padding-left: 0;
+    }
+    .checklist li {
+      padding: 5px 0;
+    }
+    .checklist li:before {
+      content: "☐ ";
+      margin-right: 10px;
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎨 Image Preview Feature - Manual Testing Guide</h1>
+  
+  <p><strong>Testing URL:</strong> <a href="http://localhost:4000/verify" target="_blank">http://localhost:4000/verify</a></p>
+  
+  <h2>✅ Test Case 1: Upload Image Preview</h2>
+  <div class="test-case">
+    <h3>Steps:</h3>
+    <ol>
+      <li>Navigate to <code>http://localhost:4000/verify</code></li>
+      <li>Scroll to the "Selfie Photo *" section</li>
+      <li>Click the <strong>"📁 Upload Image"</strong> button</li>
+      <li>Select any image file from your computer (under 1MB)</li>
+    </ol>
+    
+    <div class="expected">
+      <strong>Expected Result:</strong>
+      <ul class="checklist">
+        <li>The upload placeholder (with camera icon and buttons) should hide</li>
+        <li>A preview of your uploaded image should appear</li>
+        <li>Two buttons should be visible:
+          <ul>
+            <li><strong>"🔄 Retake Photo"</strong></li>
+            <li><strong>"✓ Use This Photo"</strong></li>
+          </ul>
+        </li>
+        <li>The preview image should be clearly visible and properly sized</li>
+      </ul>
+    </div>
+  </div>
+  
+  <h2>🔄 Test Case 2: Retake/Reselect Functionality</h2>
+  <div class="test-case">
+    <h3>Steps:</h3>
+    <ol>
+      <li>After uploading an image (from Test Case 1)</li>
+      <li>Click the <strong>"🔄 Retake Photo"</strong> button</li>
+    </ol>
+    
+    <div class="expected">
+      <strong>Expected Result:</strong>
+      <ul class="checklist">
+        <li>The preview should disappear</li>
+        <li>The original upload placeholder should return</li>
+        <li>The camera icon and both buttons ("Take Picture" and "Upload Image") should be visible again</li>
+        <li>You should be able to select a different image</li>
+      </ul>
+    </div>
+  </div>
+  
+  <h2>📷 Test Case 3: Camera Capture Preview</h2>
+  <div class="test-case">
+    <h3>Steps:</h3>
+    <ol>
+      <li>Navigate to <code>http://localhost:4000/verify</code></li>
+      <li>Click the <strong>"📷 Take Picture"</strong> button</li>
+      <li>Allow camera access when prompted</li>
+      <li>Click the <strong>"Capture"</strong> button in the camera modal</li>
+    </ol>
+    
+    <div class="expected">
+      <strong>Expected Result:</strong>
+      <ul class="checklist">
+        <li>Camera modal should close automatically</li>
+        <li>A preview of the captured image should appear</li>
+        <li>The same "🔄 Retake Photo" and "✓ Use This Photo" buttons should be visible</li>
+        <li>The captured image should be clearly visible</li>
+      </ul>
+    </div>
+  </div>
+  
+  <h2>✓ Test Case 4: Confirm and Submit</h2>
+  <div class="test-case">
+    <h3>Steps:</h3>
+    <ol>
+      <li>Fill in all required fields:
+        <ul>
+          <li>Full Name: <code>Test User</code></li>
+          <li>Email: <code>test@example.com</code></li>
+          <li>Ghana Card PIN: <code>GHA-123456789-1</code></li>
+        </ul>
+      </li>
+      <li>Upload or capture a selfie (preview should be visible)</li>
+      <li>Click <strong>"✓ Use This Photo"</strong> button (optional - just confirms the image)</li>
+      <li>Click the <strong>"Start Verification"</strong> button at the bottom</li>
+    </ol>
+    
+    <div class="expected">
+      <strong>Expected Result:</strong>
+      <ul class="checklist">
+        <li>Form should submit successfully</li>
+        <li>You should be redirected to the result page</li>
+        <li>Verification should process (mock mode will succeed for this PIN)</li>
+      </ul>
+    </div>
+  </div>
+  
+  <h2>❌ Test Case 5: Validation Without Image</h2>
+  <div class="test-case">
+    <h3>Steps:</h3>
+    <ol>
+      <li>Navigate to <code>http://localhost:4000/verify</code></li>
+      <li>Fill in all text fields (name, email, PIN)</li>
+      <li><strong>Do NOT</strong> upload or capture any image</li>
+      <li>Try to click <strong>"Start Verification"</strong></li>
+    </ol>
+    
+    <div class="expected">
+      <strong>Expected Result:</strong>
+      <ul class="checklist">
+        <li>An error message should appear: "Please take a selfie or upload a photo"</li>
+        <li>Form should NOT submit</li>
+        <li>You should remain on the verification page</li>
+      </ul>
+    </div>
+  </div>
+  
+  <h2>🔁 Test Case 6: Switch Between Upload and Capture</h2>
+  <div class="test-case">
+    <h3>Steps:</h3>
+    <ol>
+      <li>Upload an image using "Upload Image"</li>
+      <li>Preview should appear</li>
+      <li>Click "🔄 Retake Photo"</li>
+      <li>Now click "📷 Take Picture" instead</li>
+      <li>Capture a photo</li>
+    </ol>
+    
+    <div class="expected">
+      <strong>Expected Result:</strong>
+      <ul class="checklist">
+        <li>Should be able to switch from upload to capture seamlessly</li>
+        <li>Preview should update with the captured image</li>
+        <li>Previous uploaded image should be replaced</li>
+      </ul>
+    </div>
+  </div>
+  
+  <h2>📋 Complete Feature Checklist</h2>
+  <div class="test-case">
+    <h3>Verify ALL of the following work correctly:</h3>
+    <ul class="checklist">
+      <li>Upload button triggers file selection</li>
+      <li>Uploaded image shows preview immediately</li>
+      <li>Camera button opens camera modal</li>
+      <li>Captured image shows preview after capture</li>
+      <li>Preview image is clearly visible and properly sized</li>
+      <li>Retake button hides preview and shows upload options again</li>
+      <li>Can switch between upload and capture methods</li>
+      <li>Confirm button works (even though it's optional)</li>
+      <li>Form validates that an image is present before submission</li>
+      <li>Form submits successfully with preview image</li>
+    </ul>
+  </div>
+  
+  <h2>🎯 Success Criteria</h2>
+  <p>The feature is working correctly if:</p>
+  <ol>
+    <li>✅ Users can see a preview of their uploaded image</li>
+    <li>✅ Users can see a preview of their captured selfie</li>
+    <li>✅ Users can retake/reselect their image</li>
+    <li>✅ Form validation prevents submission without an image</li>
+    <li>✅ Form submits successfully with the previewed image</li>
+    <li>✅ UI is smooth with no visual glitches</li>
+  </ol>
+  
+  <hr>
+  
+  <p><strong>Note:</strong> All tests should be performed in both:</p>
+  <ul>
+    <li>🖥️ Desktop browser (Chrome, Firefox, Safari)</li>
+    <li>📱 Mobile browser (if available)</li>
+  </ul>
+  
+  <p style="text-align: center; margin-top: 40px; color: #6b7280;">
+    <em>After completing all tests, verify the verification flow works end-to-end.</em>
+  </p>
+</body>
+</html>

@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/assets/mcubePlus.png">
+  <title>Identity Verification | M'Cube Plus</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #fff8e6 0%, #f8e0b2 50%, #f2c46d 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 520px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #b47b18 0%, #e3b23c 50%, #f7d36b 100%);
+      color: white;
+      padding: 28px 24px 24px;
+      text-align: center;
+    }
+    .logo-mark {
+      width: 72px;
+      height: auto;
+      display: block;
+      margin: 0 auto 10px;
+    }
+    .header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .header p {
+      font-size: 0.95rem;
+      opacity: 0.95;
+      line-height: 1.5;
+    }
+    .progress-steps {
+      display: flex;
+      justify-content: space-between;
+      padding: 24px;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+    }
+    .step::after {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      width: 100%;
+      height: 2px;
+      background: #e5e7eb;
+      z-index: 0;
+    }
+    .step:last-child::after {
+      display: none;
+    }
+    .step-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      position: relative;
+      z-index: 1;
+    }
+    .step.active .step-circle {
+      background: #c48a1d;
+      color: white;
+    }
+    .step-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .step.active .step-label {
+      color: #b47b18;
+    }
+    .form-content {
+      padding: 32px 24px;
+    }
+    .form-group {
+      margin-bottom: 24px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+      font-size: 0.9375rem;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="email"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #c48a1d;
+      box-shadow: 0 0 0 3px rgba(196, 138, 29, 0.18);
+    }
+    .form-hint {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+    .file-upload {
+      border: 2px dashed #e3c48a;
+      border-radius: 8px;
+      padding: 24px;
+      text-align: center;
+      transition: all 0.2s;
+      cursor: pointer;
+      background: #fdf7ec;
+    }
+    .file-upload:hover {
+      border-color: #c48a1d;
+      background: #fdf3e0;
+    }
+    .file-upload.has-file {
+      border-color: #c48a1d;
+      background: #fffaf0;
+    }
+    .file-upload input[type="file"] {
+      display: none;
+    }
+    .upload-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 12px;
+      background: #b47b18;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+    }
+    .file-upload.has-file .upload-icon {
+      background: #c48a1d;
+    }
+    .upload-text {
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+    .upload-subtext {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .selfie-actions {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    .choice-btn {
+      flex: 1 1 130px;
+      padding: 8px 12px;
+      border-radius: 9999px;
+      border: 1px solid #e3c48a;
+      background: #ffffff;
+      color: #5c3c0a;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .choice-btn-primary {
+      background: linear-gradient(135deg, #b47b18 0%, #e3b23c 50%, #f7d36b 100%);
+      color: #1f1305;
+      border-color: transparent;
+      box-shadow: 0 2px 8px rgba(180, 123, 24, 0.35);
+    }
+    .choice-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    }
+    .btn {
+      width: 100%;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #b47b18 0%, #e3b23c 50%, #f7d36b 100%);
+      color: #1f1305;
+      box-shadow: 0 4px 12px rgba(180, 123, 24, 0.45);
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(180, 123, 24, 0.55);
+    }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: #6b7280;
+      border: 2px solid #e5e7eb;
+      margin-top: 12px;
+    }
+    .btn-secondary:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .camera-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .camera-modal.hidden {
+      display: none;
+    }
+    .camera-dialog {
+      background: #111827;
+      border-radius: 16px;
+      padding: 16px 16px 20px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+      color: #f9fafb;
+    }
+    .camera-header {
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 1rem;
+    }
+    .camera-body {
+      margin-top: 8px;
+    }
+    #cameraPreview {
+      width: 100%;
+      border-radius: 12px;
+      background: #000;
+      min-height: 220px;
+    }
+    .camera-hint {
+      font-size: 0.8rem;
+      margin-top: 8px;
+      color: #e5e7eb;
+    }
+    .camera-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .btn-cancel,
+    .btn-capture {
+      padding: 8px 14px;
+      border-radius: 9999px;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-cancel {
+      background: transparent;
+      color: #e5e7eb;
+      border: 1px solid rgba(249, 250, 251, 0.25);
+    }
+    .btn-capture {
+      background: linear-gradient(135deg, #b47b18 0%, #e3b23c 50%, #f7d36b 100%);
+      color: #1f1305;
+      box-shadow: 0 3px 10px rgba(180, 123, 24, 0.5);
+    }
+    .info-box {
+      background: #fff8e6;
+      border: 1px solid #f3d08a;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .info-box-title {
+      font-weight: 600;
+      color: #8a5a13;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .info-box-text {
+      font-size: 0.875rem;
+      color: #5c3c0a;
+      line-height: 1.5;
+    }
+    .error-message {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 0.875rem;
+      display: none;
+    }
+    .error-message.show {
+      display: block;
+    }
+    #imagePreviewContainer {
+      padding: 0;
+    }
+    #imagePreviewContainer.hidden {
+      display: none;
+    }
+    #uploadPlaceholder.hidden {
+      display: none;
+    }
+    #imagePreview {
+      width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      background: #000;
+      display: block;
+    }
+    .preview-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .preview-actions .choice-btn {
+      flex: 1 1 140px;
+      min-width: 140px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="/assets/mcubePlus.png" alt="M'Cube Plus" class="logo-mark" />
+      <h1>Identity Verification</h1>
+      <p>Secure KYC verification powered by M'Cube Plus</p>
+    </div>
+
+    <div class="progress-steps">
+      <div class="step active">
+        <div class="step-circle">1</div>
+        <div class="step-label">Your Details</div>
+      </div>
+      <div class="step">
+        <div class="step-circle">2</div>
+        <div class="step-label">Ghana Card</div>
+      </div>
+      <div class="step">
+        <div class="step-circle">3</div>
+        <div class="step-label">Selfie</div>
+      </div>
+      <div class="step">
+        <div class="step-circle">4</div>
+        <div class="step-label">Verify</div>
+      </div>
+    </div>
+
+    <form method="post" action="/verify/begin" id="verifyForm">
+      <div class="form-content">
+        <div class="info-box">
+          <div class="info-box-title">
+            <span>🔒</span>
+            <span>Why we need this</span>
+          </div>
+          <div class="info-box-text">
+            We use your Ghana Card and selfie to securely verify your identity with Ghana's trusted National Identification Authority. Your data is encrypted and never shared.
+          </div>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <div class="form-group">
+          <label for="name">Full Name *</label>
+          <input 
+            type="text" 
+            id="name" 
+            name="name" 
+            required 
+            placeholder="Enter your full name as on ID"
+            autocomplete="name"
+          />
+          <div class="form-hint">Your name exactly as it appears on your ID</div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address *</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            required 
+            placeholder="your.email@example.com"
+            autocomplete="email"
+          />
+          <div class="form-hint">We'll send verification updates to this email</div>
+        </div>
+
+        <div class="form-group">
+          <label for="pinNumber">Ghana Card PIN *</label>
+          <input 
+            type="text" 
+            id="pinNumber" 
+            name="pinNumber" 
+            required 
+            placeholder="GHA-XXXXXXXXX-X"
+            pattern="GHA-[0-9]{9}-[0-9]"
+            maxlength="17"
+          />
+          <div class="form-hint">Format: GHA-XXXXXXXXX-X (17 characters)</div>
+        </div>
+
+        <div class="form-group">
+          <label>Selfie Photo *</label>
+          <div class="file-upload" id="fileUploadArea">
+            <input type="file" id="selfieFile" accept="image/*" />
+            <input type="hidden" name="imageBase64" id="imageBase64" />
+            
+            <!-- Initial state: No image -->
+            <div id="uploadPlaceholder">
+              <div class="upload-icon">📸</div>
+              <div class="upload-text" id="uploadText">No selfie selected yet</div>
+              <div class="upload-subtext" id="uploadSubtext">Choose an option below to take a picture or upload one</div>
+              <div class="selfie-actions">
+                <button type="button" class="choice-btn choice-btn-primary" id="takePictureBtn">📷 Take Picture</button>
+                <button type="button" class="choice-btn" id="uploadImageBtn">📁 Upload Image</button>
+              </div>
+            </div>
+
+            <!-- Preview state: Image captured/uploaded -->
+            <div id="imagePreviewContainer" class="hidden">
+              <img id="imagePreview" src="" alt="Selfie Preview" />
+              <div class="preview-actions">
+                <button type="button" class="choice-btn" id="retakeBtn">🔄 Retake Photo</button>
+                <button type="button" class="choice-btn choice-btn-primary" id="confirmBtn">✓ Use This Photo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+          <span id="btnText">Start Verification</span>
+        </button>
+
+        <a href="<%= borrowersPortalUrl %>" class="btn btn-secondary">
+          ← Back to My Account
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <div id="cameraModal" class="camera-modal hidden">
+    <div class="camera-dialog">
+      <div class="camera-header">Take a Selfie</div>
+      <div class="camera-body">
+        <video id="cameraPreview" autoplay playsinline muted></video>
+        <div class="camera-hint">
+          Allow camera access when prompted. Make sure your face is centered and in good lighting.
+        </div>
+      </div>
+      <div class="camera-actions">
+        <button type="button" class="btn-cancel" id="cancelCameraBtn">Cancel</button>
+        <button type="button" class="btn-capture" id="captureBtn">Capture</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const form = document.getElementById('verifyForm');
+      const fileInput = document.getElementById('selfieFile');
+      const fileUploadArea = document.getElementById('fileUploadArea');
+      const imageBase64Input = document.getElementById('imageBase64');
+      const submitBtn = document.getElementById('submitBtn');
+      const btnText = document.getElementById('btnText');
+      const uploadText = document.getElementById('uploadText');
+      const uploadSubtext = document.getElementById('uploadSubtext');
+      const errorMessage = document.getElementById('errorMessage');
+      const pinInput = document.getElementById('pinNumber');
+
+      const takePictureBtn = document.getElementById('takePictureBtn');
+      const uploadImageBtn = document.getElementById('uploadImageBtn');
+      const cameraModal = document.getElementById('cameraModal');
+      const cameraPreview = document.getElementById('cameraPreview');
+      const captureBtn = document.getElementById('captureBtn');
+      const cancelCameraBtn = document.getElementById('cancelCameraBtn');
+
+      // Preview elements
+      const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+      const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+      const imagePreview = document.getElementById('imagePreview');
+      const retakeBtn = document.getElementById('retakeBtn');
+      const confirmBtn = document.getElementById('confirmBtn');
+
+      let mediaStream = null;
+      let capturedDataUrl = null;
+      let previewDataUrl = null;
+
+      uploadImageBtn.addEventListener('click', function(event) {
+        event.stopPropagation();
+        fileInput.click();
+      });
+
+      takePictureBtn.addEventListener('click', function() {
+        startCamera();
+      });
+
+      // File selection handler - Now shows preview
+      fileInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+          const file = this.files[0];
+          const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+
+          if (file.size > 1024 * 1024) {
+            showError('Image must be less than 1MB. Selected image is ' + sizeMB + 'MB');
+            this.value = '';
+            return;
+          }
+
+          // Read file and show preview
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            showImagePreview(e.target.result, 'upload');
+            capturedDataUrl = null; // Clear camera capture if any
+          };
+          reader.onerror = function() {
+            showError('Failed to read file. Please try again.');
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // PIN formatting
+      pinInput.addEventListener('input', function(e) {
+        let value = e.target.value.toUpperCase().replace(/[^GHA0-9-]/g, '');
+        e.target.value = value;
+      });
+
+      // Form submission
+      form.addEventListener('submit', function(e) {
+        // Check if we have a preview (either from capture or upload)
+        if (!previewDataUrl) {
+          showError('Please take a selfie or upload a photo');
+          e.preventDefault();
+          return;
+        }
+
+        if (imageBase64Input.value) {
+          return; // Already processed
+        }
+
+        e.preventDefault();
+        processAndSubmit();
+      });
+
+      async function startCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          showError('Your browser does not support camera capture. Please use Upload Image instead.');
+          return;
+        }
+
+        try {
+          hideError();
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user' }
+          });
+          cameraPreview.srcObject = mediaStream;
+          cameraModal.classList.remove('hidden');
+        } catch (err) {
+          console.error(err);
+          if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            showError('We could not access your camera. Please allow camera permission in your browser settings or use Upload Image instead.');
+          } else {
+            showError('Could not start camera: ' + err.message);
+          }
+        }
+      }
+
+      function stopCamera() {
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(function(track) {
+            track.stop();
+          });
+          mediaStream = null;
+        }
+        cameraPreview.srcObject = null;
+      }
+
+      captureBtn.addEventListener('click', function() {
+        if (!mediaStream) {
+          showError('Camera is not active. Please try again.');
+          return;
+        }
+
+        const video = cameraPreview;
+        const canvas = document.createElement('canvas');
+        canvas.width = 640;
+        canvas.height = 480;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 640, 480);
+        ctx.drawImage(video, 0, 0, 640, 480);
+
+        const dataUrl = canvas.toDataURL('image/png', 0.9);
+
+        // Enforce strict < 1MB limit on captured image
+        const base64 = dataUrl.split(',')[1] || '';
+        const byteLength = Math.ceil((base64.length * 3) / 4);
+        if (byteLength > 1024 * 1024) {
+          const sizeMb = (byteLength / (1024 * 1024)).toFixed(2);
+          showError('Captured selfie must be less than 1MB. Current size is ' + sizeMb + 'MB. Please move slightly farther from the camera or try again.');
+          return;
+        }
+
+        // Close camera modal and show preview
+        cameraModal.classList.add('hidden');
+        stopCamera();
+
+        // Show preview of captured image
+        showImagePreview(dataUrl, 'capture');
+        capturedDataUrl = dataUrl;
+        fileInput.value = ''; // Clear file input if any
+      });
+
+      cancelCameraBtn.addEventListener('click', function() {
+        cameraModal.classList.add('hidden');
+        stopCamera();
+      });
+
+      function processAndSubmit() {
+        submitBtn.disabled = true;
+        btnText.innerHTML = '<div class="spinner"></div> Processing selfie...';
+        hideError();
+
+        // Use the preview data URL (works for both capture and upload)
+        if (previewDataUrl) {
+          resizeAndSubmit(previewDataUrl);
+        } else {
+          showError('Please select a selfie photo');
+          resetButton();
+        }
+      }
+
+      function resizeAndSubmit(sourceDataUrl) {
+        const img = new Image();
+        img.onload = function() {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 640;
+            canvas.height = 480;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, 640, 480);
+
+            const ratio = Math.min(640 / img.width, 480 / img.height);
+            const newWidth = img.width * ratio;
+            const newHeight = img.height * ratio;
+            const offsetX = (640 - newWidth) / 2;
+            const offsetY = (480 - newHeight) / 2;
+
+            ctx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
+
+            const pngDataUrl = canvas.toDataURL('image/png', 0.9);
+            const base64 = pngDataUrl.split(',')[1] || '';
+
+            const byteLength = Math.ceil((base64.length * 3) / 4);
+            if (byteLength > 1024 * 1024) {
+              const sizeMb = (byteLength / (1024 * 1024)).toFixed(2);
+              showError('Processed selfie image must be less than 1MB. Current size is ' + sizeMb + 'MB. Please move slightly farther from the camera or use a smaller image.');
+              resetButton();
+              return;
+            }
+
+            imageBase64Input.value = base64;
+            form.submit();
+          } catch (err) {
+            showError('Failed to process image: ' + err.message);
+            resetButton();
+          }
+        };
+        img.onerror = function() {
+          showError('Failed to load image. Please try another photo.');
+          resetButton();
+        };
+        img.src = sourceDataUrl;
+      }
+
+      // Show image preview with retake/confirm options
+      function showImagePreview(dataUrl, source) {
+        previewDataUrl = dataUrl;
+        imagePreview.src = dataUrl;
+        uploadPlaceholder.classList.add('hidden');
+        imagePreviewContainer.classList.remove('hidden');
+        fileUploadArea.classList.add('has-file');
+        hideError();
+      }
+
+      // Hide preview and return to upload options
+      function hideImagePreview() {
+        imagePreview.src = '';
+        previewDataUrl = null;
+        uploadPlaceholder.classList.remove('hidden');
+        imagePreviewContainer.classList.add('hidden');
+        fileUploadArea.classList.remove('has-file');
+        fileInput.value = '';
+        capturedDataUrl = null;
+      }
+
+      // Retake/Reselect button handler
+      retakeBtn.addEventListener('click', function() {
+        hideImagePreview();
+        hideError();
+      });
+
+      // Confirm button handler
+      confirmBtn.addEventListener('click', function() {
+        if (!previewDataUrl) {
+          showError('No image selected. Please take or upload a photo.');
+          return;
+        }
+        hideError();
+        // Keep preview visible, user can now submit the form
+      });
+
+      function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.classList.add('show');
+      }
+
+      function hideError() {
+        errorMessage.classList.remove('show');
+      }
+
+      function resetButton() {
+        submitBtn.disabled = false;
+        btnText.textContent = 'Start Verification';
+      }
+    })();
+  </script>
+</body>
+</html>

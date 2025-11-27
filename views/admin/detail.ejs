@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verification Details | Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f3f4f6;
+      min-height: 100vh;
+    }
+    .header {
+      background: linear-gradient(135deg, #2b1903 0%, #6e4105 40%, #b47b18 100%);
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo-mark {
+      width: 40px;
+      height: auto;
+      display: block;
+    }
+    .btn-back {
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+    .header h1 {
+      font-size: 1.25rem;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 24px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #111827;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .detail-item {
+      border-left: 3px solid #e5e7eb;
+      padding-left: 16px;
+    }
+    .detail-label {
+      font-size: 0.8125rem;
+      color: #6b7280;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .detail-value {
+      font-size: 1rem;
+      color: #111827;
+      font-weight: 600;
+    }
+    .status-approved { color: #059669; }
+    .status-failed { color: #dc2626; }
+    .status-pending { color: #d97706; }
+    pre {
+      background: #f9fafb;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="/admin/dashboard" class="btn-back">← Back</a>
+    <img src="/assets/mcubePlus.png" alt="M'Cube Plus" class="logo-mark" />
+    <h1>Verification Details</h1>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <div class="card-title">User Information</div>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="detail-label">Name</div>
+          <div class="detail-value"><%= verification.name %></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Email</div>
+          <div class="detail-value"><%= verification.email %></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Ghana Card PIN</div>
+          <div class="detail-value"><%= verification.pin_number %></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Status</div>
+          <div class="detail-value status-<%= verification.status %>">
+            <%= verification.status %>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Session ID</div>
+          <div class="detail-value"><%= verification.session_id %></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Created At</div>
+          <div class="detail-value"><%= new Date(verification.created_at).toLocaleString() %></div>
+        </div>
+      </div>
+    </div>
+
+    <% if (verification.code || verification.verified) { %>
+    <div class="card">
+      <div class="card-title">API Response</div>
+      <div class="detail-grid">
+        <% if (verification.code) { %>
+        <div class="detail-item">
+          <div class="detail-label">Response Code</div>
+          <div class="detail-value"><%= verification.code %></div>
+        </div>
+        <% } %>
+        <% if (verification.verified) { %>
+        <div class="detail-item">
+          <div class="detail-label">Verified</div>
+          <div class="detail-value"><%= verification.verified %></div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (responseData) { %>
+    <div class="card">
+      <div class="card-title">Full API Response</div>
+      <pre><%= JSON.stringify(responseData, null, 2) %></pre>
+    </div>
+    <% } %>
+  </div>
+</body>
+</html>

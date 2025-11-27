@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/assets/mcubePlus.png">
+  <title>Admin Dashboard | M'Cube Plus Verification</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f3f4f6;
+      min-height: 100vh;
+    }
+    .header {
+      background: linear-gradient(135deg, #2b1903 0%, #6e4105 40%, #b47b18 100%);
+      color: white;
+      padding: 16px 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo-mark {
+      width: 40px;
+      height: auto;
+      display: block;
+    }
+    .header-title h1 {
+      font-size: 1.25rem;
+      margin-bottom: 2px;
+    }
+    .header-subtitle {
+      font-size: 0.875rem;
+      opacity: 0.8;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .username {
+      font-size: 0.875rem;
+      opacity: 0.9;
+    }
+    .btn-logout {
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      border-left: 4px solid #e5e7eb;
+    }
+    .stat-card.total { border-left-color: #3b82f6; }
+    .stat-card.approved { border-left-color: #10b981; }
+    .stat-card.failed { border-left-color: #ef4444; }
+    .stat-card.pending { border-left-color: #f59e0b; }
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .search-bar {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      margin-bottom: 24px;
+    }
+    .search-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+    .table-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+    .table-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .table-header h2 {
+      font-size: 1.125rem;
+      color: #111827;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      text-align: left;
+      padding: 16px 24px;
+      background: #f9fafb;
+      color: #6b7280;
+      font-weight: 600;
+      font-size: 0.875rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    td {
+      padding: 16px 24px;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 0.9375rem;
+    }
+    tr:hover {
+      background: #f9fafb;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-approved {
+      background: #ecfdf5;
+      color: #059669;
+    }
+    .status-failed {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+    .status-pending {
+      background: #fef3c7;
+      color: #d97706;
+    }
+    .btn-view {
+      padding: 6px 12px;
+      background: #2563eb;
+      color: white;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-view:hover {
+      background: #1d4ed8;
+    }
+    .empty-state {
+      padding: 64px 24px;
+      text-align: center;
+      color: #6b7280;
+    }
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <img src="/assets/mcubePlus.png" alt="M'Cube Plus" class="logo-mark" />
+      <div class="header-title">
+        <h1>Admin Dashboard</h1>
+        <div class="header-subtitle">M'Cube Plus Verification System</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="username">👤 <%= adminUsername %></span>
+      <a href="/admin/logout" class="btn-logout">Logout</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-label">Total Verifications</div>
+        <div class="stat-value"><%= stats.total %></div>
+      </div>
+      <div class="stat-card approved">
+        <div class="stat-label">Approved</div>
+        <div class="stat-value"><%= stats.approved %></div>
+      </div>
+      <div class="stat-card failed">
+        <div class="stat-label">Failed</div>
+        <div class="stat-value"><%= stats.failed %></div>
+      </div>
+      <div class="stat-card pending">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value"><%= stats.pending %></div>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <form action="/admin/search" method="get">
+        <input 
+          type="search" 
+          name="q" 
+          class="search-input" 
+          placeholder="Search by name, email, or Ghana Card PIN..." 
+          value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>"
+        />
+      </form>
+    </div>
+
+    <div class="table-container">
+      <div class="table-header">
+        <h2>Recent Verifications</h2>
+      </div>
+
+      <% if (verifications && verifications.length > 0) { %>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% verifications.forEach(function(v) { %>
+              <tr>
+                <td><%= v.name %></td>
+                <td><%= v.email %></td>
+                <td>
+                  <span class="status-badge status-<%= v.status %>">
+                    <%= v.status %>
+                  </span>
+                </td>
+                <td><%= new Date(v.created_at).toLocaleString() %></td>
+                <td>
+                  <a href="/admin/verification/<%= v.session_id %>" class="btn-view">
+                    View Details
+                  </a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <p>No verifications found</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</body>
+</html>
