@@ -24,8 +24,9 @@ if (config.isProd) {
 }
 
 app.use(express.static(path.join(__dirname, "..", "public")));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Increase body size limit for selfie image uploads (up to 2MB)
+app.use(bodyParser.json({ limit: '2mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '2mb' }));
 app.use(cookieParser());
 
 // Configure session store based on environment
