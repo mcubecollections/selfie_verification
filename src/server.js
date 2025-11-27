@@ -22,8 +22,25 @@ app.use(express.static(path.join(__dirname, "..", "public")));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Configure session store based on environment
+let sessionStore;
+if (process.env.DATABASE_URL) {
+  // Use PostgreSQL session store for production
+  const pgSession = require('connect-pg-simple')(session);
+  sessionStore = new pgSession({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: true,
+  });
+  console.log('Using PostgreSQL session store');
+} else {
+  // Use MemoryStore for local development only
+  console.log('Using MemoryStore for sessions (development only)');
+}
+
 app.use(
   session({
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || "mcube-verify-secret-key",
     resave: false,
     saveUninitialized: false,

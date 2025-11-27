@@ -34,7 +34,16 @@ router.post("/admin/login", async (req, res) => {
 
     req.session.adminId = admin.id;
     req.session.adminUsername = admin.username;
-    res.redirect("/admin/dashboard");
+    
+    // Ensure session is saved before redirecting
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        res.redirect("/admin/login?error=invalid");
+        return;
+      }
+      res.redirect("/admin/dashboard");
+    });
   } catch (error) {
     console.error("Login error:", error);
     res.redirect("/admin/login?error=invalid");
