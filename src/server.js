@@ -61,6 +61,14 @@ app.use("/", verificationRoutes);
 app.use("/", adminRoutes);
 
 app.use((err, req, res, next) => {
+  // Log all errors to help with debugging
+  console.error('=== ERROR ===');
+  console.error('Path:', req.path);
+  console.error('Method:', req.method);
+  console.error('Error:', err);
+  console.error('Stack:', err.stack);
+  console.error('=============');
+  
   const status = 500;
   const message =
     config.nodeEnv === "development"
