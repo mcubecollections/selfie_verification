@@ -221,9 +221,13 @@
     <% } %>
 
     <div class="actions">
+      <% if (status === 'approved') { %>
       <a href="https://mcubeholdings.com/" class="btn btn-primary">
-       Visit Our Website
+        Visit Our Website
       </a>
+      <% } else if (status === 'failed') { %>
+      <a href="https://verification-htua.onrender.com/verify" class="btn">Try Again</a>
+      <% } %>
 
       <% if (status === 'failed') { %>
       <div class="info-box">
