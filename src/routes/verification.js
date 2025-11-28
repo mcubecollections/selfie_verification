@@ -3,11 +3,16 @@ const config = require("../config");
 const database = require("../database");
 const selfieService = require("../selfieService");
 const emailService = require("../emailService");
+const cloudinaryService = require("../cloudinaryService");
 
 const router = express.Router();
 
 router.get("/health", (req, res) => {
   res.json({ ok: true, env: config.nodeEnv });
+});
+
+router.get("/", (req, res) => {
+  res.render("landing");
 });
 
 router.get("/verify", (req, res) => {
@@ -44,6 +49,16 @@ router.post("/verify/begin", async (req, res, next) => {
       verification.transactionGuid ||
       `session_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
+    // Upload selfie image to Cloudinary
+    let cloudinaryUrl = null;
+    try {
+      cloudinaryUrl = await cloudinaryService.uploadSelfieImage(imageBase64, sessionId);
+      console.log('Selfie uploaded successfully:', cloudinaryUrl);
+    } catch (uploadError) {
+      console.error('Failed to upload selfie to Cloudinary:', uploadError);
+      // Continue even if upload fails - don't block verification
+    }
+
     await database.createVerification({
       sessionId,
       name,
@@ -56,6 +71,7 @@ router.post("/verify/begin", async (req, res, next) => {
       personData: verification.person,
       requestData,
       responseData: verification.raw,
+      cloudinaryUrl,
     });
 
     if (verification.status === "approved") {

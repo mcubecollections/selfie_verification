@@ -69,10 +69,23 @@ async function initializeDatabase() {
         person_data TEXT,
         request_data TEXT,
         response_data TEXT,
+        cloudinary_url VARCHAR(500),
+        progress_step INTEGER DEFAULT 0,
+        progress_data TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    
+    // Add new columns if they don't exist (for existing databases)
+    await db.query(`
+      ALTER TABLE verifications 
+      ADD COLUMN IF NOT EXISTS cloudinary_url VARCHAR(500),
+      ADD COLUMN IF NOT EXISTS progress_step INTEGER DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS progress_data TEXT
+    `).catch(() => {
+      // Columns might already exist, ignore error
+    });
     
     await db.query(`CREATE INDEX IF NOT EXISTS idx_session_id ON verifications(session_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_email ON verifications(email)`);
@@ -106,10 +119,18 @@ async function initializeDatabase() {
           person_data TEXT,
           request_data TEXT,
           response_data TEXT,
+          cloudinary_url TEXT,
+          progress_step INTEGER DEFAULT 0,
+          progress_data TEXT,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
+      
+      // Add new columns if they don't exist (for existing databases)
+      db.run(`ALTER TABLE verifications ADD COLUMN cloudinary_url TEXT`, () => {});
+      db.run(`ALTER TABLE verifications ADD COLUMN progress_step INTEGER DEFAULT 0`, () => {});
+      db.run(`ALTER TABLE verifications ADD COLUMN progress_data TEXT`, () => {});
       
       db.run(`CREATE INDEX IF NOT EXISTS idx_session_id ON verifications(session_id)`);
       db.run(`CREATE INDEX IF NOT EXISTS idx_email ON verifications(email)`);
@@ -144,6 +165,7 @@ function createVerification({
   personData,
   requestData,
   responseData,
+  cloudinaryUrl,
 }) {
   return new Promise((resolve, reject) => {
     const values = [
@@ -158,14 +180,15 @@ function createVerification({
       personData ? JSON.stringify(personData) : null,
       requestData ? JSON.stringify(requestData) : null,
       responseData ? JSON.stringify(responseData) : null,
+      cloudinaryUrl || null,
     ];
     
     if (DB_TYPE === 'postgresql') {
       db.query(
         `INSERT INTO verifications (
           session_id, name, email, pin_number, status, code, verified,
-          transaction_guid, person_data, request_data, response_data
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+          transaction_guid, person_data, request_data, response_data, cloudinary_url
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
         values,
         (err, result) => {
           if (err) return reject(err);
@@ -176,8 +199,8 @@ function createVerification({
       db.run(
         `INSERT INTO verifications (
           session_id, name, email, pin_number, status, code, verified,
-          transaction_guid, person_data, request_data, response_data
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          transaction_guid, person_data, request_data, response_data, cloudinary_url
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         values,
         function (err) {
           if (err) return reject(err);
