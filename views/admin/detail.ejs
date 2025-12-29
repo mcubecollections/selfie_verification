@@ -826,19 +826,224 @@
       </div>
       <% } %>
 
-      <!-- Full API Response -->
-      <% if (responseData) { %>
+      <!-- Full API Response - Formatted for Non-Technical Users -->
+      <% if (responseData) { 
+         // Extract data from different possible structures
+         const apiData = responseData.data || responseData;
+         const apiPerson = apiData.person || responseData.person;
+      %>
       <div class="card" style="grid-column: 1 / -1">
-        <div class="api-response-container">
-          <div class="api-response-header">
-            <div class="api-response-title">📡 Full API Response</div>
-            <button class="btn-copy" onclick="copyToClipboard()">
-              📋 Copy JSON
-            </button>
+        <div class="card-title">
+          <span class="card-icon">📋</span>
+          <span>Complete Verification Details</span>
+        </div>
+        
+        <!-- API Response Metadata -->
+        <div class="person-section">
+          <div class="person-section-title">📡 Verification Metadata</div>
+          <div class="person-data-grid">
+            <% if (apiData.transactionGuid) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Transaction ID</div>
+              <div class="person-data-value" style="font-size: 0.8rem; word-break: break-all;"><%= apiData.transactionGuid %></div>
+            </div>
+            <% } %>
+            <% if (apiData.shortGuid) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Reference Code</div>
+              <div class="person-data-value"><%= apiData.shortGuid %></div>
+            </div>
+            <% } %>
+            <% if (apiData.verified) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Verification Status</div>
+              <div class="person-data-value">
+                <span class="badge badge-<%= apiData.verified === 'TRUE' ? 'success' : 'error' %>">
+                  <%= apiData.verified === 'TRUE' ? 'VERIFIED' : 'NOT VERIFIED' %>
+                </span>
+              </div>
+            </div>
+            <% } %>
+            <% if (responseData.code) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Response Code</div>
+              <div class="person-data-value"><%= responseData.code %> - <%= responseData.msg || 'Success' %></div>
+            </div>
+            <% } %>
+            <% if (apiData.userID) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">User ID</div>
+              <div class="person-data-value"><%= apiData.userID %></div>
+            </div>
+            <% } %>
+            <% if (apiData.source) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Verification Source</div>
+              <div class="person-data-value"><%= apiData.source %></div>
+            </div>
+            <% } %>
+            <% if (apiData.center) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Verification Center</div>
+              <div class="person-data-value"><%= apiData.center %></div>
+            </div>
+            <% } %>
+            <% if (apiData.requestTimestamp) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Request Time</div>
+              <div class="person-data-value"><%= new Date(apiData.requestTimestamp).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'medium' }) %></div>
+            </div>
+            <% } %>
+            <% if (apiData.responseTimestamp) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Response Time</div>
+              <div class="person-data-value"><%= new Date(apiData.responseTimestamp).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'medium' }) %></div>
+            </div>
+            <% } %>
           </div>
-          <pre id="apiResponse">
-<%= JSON.stringify(responseData, null, 2) %></pre
-          >
+        </div>
+
+        <!-- Person Information from API (if not already shown) -->
+        <% if (apiPerson && !personData) { %>
+        <div class="person-section">
+          <div class="person-section-title">🆔 Ghana Card Details</div>
+          <div class="person-data-grid">
+            <% if (apiPerson.nationalId) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">National ID</div>
+              <div class="person-data-value"><%= apiPerson.nationalId %></div>
+            </div>
+            <% } %>
+            <% if (apiPerson.cardId) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Card ID</div>
+              <div class="person-data-value"><%= apiPerson.cardId %></div>
+            </div>
+            <% } %>
+            <% if (apiPerson.surname) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Surname</div>
+              <div class="person-data-value"><%= apiPerson.surname %></div>
+            </div>
+            <% } %>
+            <% if (apiPerson.forenames) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Forenames</div>
+              <div class="person-data-value"><%= apiPerson.forenames %></div>
+            </div>
+            <% } %>
+            <% if (apiPerson.birthDate) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Date of Birth</div>
+              <div class="person-data-value"><%= apiPerson.birthDate %></div>
+            </div>
+            <% } %>
+            <% if (apiPerson.gender) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Gender</div>
+              <div class="person-data-value"><%= apiPerson.gender %></div>
+            </div>
+            <% } %>
+            <% if (apiPerson.nationality) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Nationality</div>
+              <div class="person-data-value"><%= apiPerson.nationality %></div>
+            </div>
+            <% } %>
+            <% if (apiPerson.cardValidFrom) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Card Valid From</div>
+              <div class="person-data-value"><%= apiPerson.cardValidFrom %></div>
+            </div>
+            <% } %>
+            <% if (apiPerson.cardValidTo) { %>
+            <div class="person-data-item">
+              <div class="person-data-label">Card Valid To</div>
+              <div class="person-data-value"><%= apiPerson.cardValidTo %></div>
+            </div>
+            <% } %>
+          </div>
+        </div>
+        
+        <!-- Addresses from API -->
+        <% if (apiPerson.addresses && apiPerson.addresses.length > 0) { %>
+        <div class="person-section">
+          <div class="person-section-title">🏠 Address Details</div>
+          <% apiPerson.addresses.forEach((addr, idx) => { %>
+          <div class="address-card">
+            <div class="address-type"><%= addr.type || 'Address ' + (idx + 1) %></div>
+            <div class="person-data-grid">
+              <% if (addr.town) { %>
+              <div class="person-data-item">
+                <div class="person-data-label">Town</div>
+                <div class="person-data-value"><%= addr.town %></div>
+              </div>
+              <% } %>
+              <% if (addr.community) { %>
+              <div class="person-data-item">
+                <div class="person-data-label">Community</div>
+                <div class="person-data-value"><%= addr.community %></div>
+              </div>
+              <% } %>
+              <% if (addr.districtName) { %>
+              <div class="person-data-item">
+                <div class="person-data-label">District</div>
+                <div class="person-data-value"><%= addr.districtName.trim() %></div>
+              </div>
+              <% } %>
+              <% if (addr.region) { %>
+              <div class="person-data-item">
+                <div class="person-data-label">Region</div>
+                <div class="person-data-value"><%= addr.region.trim() %></div>
+              </div>
+              <% } %>
+              <% if (addr.countryName) { %>
+              <div class="person-data-item">
+                <div class="person-data-label">Country</div>
+                <div class="person-data-value"><%= addr.countryName %></div>
+              </div>
+              <% } %>
+              <% if (addr.postalCode) { %>
+              <div class="person-data-item">
+                <div class="person-data-label">Postal Code</div>
+                <div class="person-data-value"><%= addr.postalCode %></div>
+              </div>
+              <% } %>
+              <% if (addr.addressDigital) { %>
+              <div class="person-data-item">
+                <div class="person-data-label">Digital Address</div>
+                <div class="person-data-value"><%= addr.addressDigital %></div>
+              </div>
+              <% } %>
+              <% if (addr.gpsAddressDetails && addr.gpsAddressDetails.gpsName) { %>
+              <div class="person-data-item">
+                <div class="person-data-label">GPS Address</div>
+                <div class="person-data-value"><%= addr.gpsAddressDetails.gpsName %></div>
+              </div>
+              <% } %>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+        <% } %>
+        <% } %>
+
+        <!-- Collapsible Raw JSON for Technical Users -->
+        <div class="person-section" style="margin-top: 16px;">
+          <details>
+            <summary style="cursor: pointer; font-weight: 600; color: var(--gray-600); margin-bottom: 8px;">
+              🔧 View Raw API Response (Technical Details)
+            </summary>
+            <div class="api-response-container" style="margin-top: 12px;">
+              <div class="api-response-header">
+                <div class="api-response-title">Raw JSON Data</div>
+                <button class="btn-copy" onclick="copyToClipboard()">
+                  📋 Copy JSON
+                </button>
+              </div>
+              <pre id="apiResponse"><%= JSON.stringify(responseData, null, 2) %></pre>
+            </div>
+          </details>
         </div>
       </div>
       <% } %>

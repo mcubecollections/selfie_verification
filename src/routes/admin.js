@@ -379,8 +379,8 @@ router.get(
           });
           doc.moveDown(1);
           
-          doc.fontSize(9).fillColor(grayColor).font('Helvetica-Oblique');
-          doc.text('This selfie was captured during the verification process.', { align: 'center' });
+          // doc.fontSize(9).fillColor(grayColor).font('Helvetica-Oblique');
+          // doc.text('This selfie was captured during the verification process.', { align: 'center' });
         } catch (imageError) {
           console.error('Error fetching selfie image:', imageError.message);
           doc.fontSize(10).fillColor(grayColor);
