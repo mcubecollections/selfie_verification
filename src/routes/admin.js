@@ -1,5 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const PDFDocument = require("pdfkit");
+const axios = require("axios");
 const database = require("../database");
 const adminAuth = require("../adminAuth");
 
@@ -34,11 +36,11 @@ router.post("/admin/login", async (req, res) => {
 
     req.session.adminId = admin.id;
     req.session.adminUsername = admin.username;
-    
+
     // Ensure session is saved before redirecting
     req.session.save((err) => {
       if (err) {
-        console.error('Session save error:', err);
+        console.error("Session save error:", err);
         res.redirect("/admin/login?error=invalid");
         return;
       }
@@ -76,45 +78,285 @@ router.get("/admin/dashboard", adminAuth.requireAuth, async (req, res) => {
   }
 });
 
-router.get("/admin/verification/:id", adminAuth.requireAuth, async (req, res) => {
-  const sessionId = req.params.id;
-  const verification = await database.getVerificationBySessionId(sessionId);
+router.get(
+  "/admin/verification/:id",
+  adminAuth.requireAuth,
+  async (req, res) => {
+    const sessionId = req.params.id;
+    const verification = await database.getVerificationBySessionId(sessionId);
 
-  if (!verification) {
-    res.status(404).render("admin/404");
-    return;
+    if (!verification) {
+      res.status(404).render("admin/404");
+      return;
+    }
+
+    let parsedPersonData = null;
+    let parsedRequestData = null;
+    let parsedResponseData = null;
+
+    try {
+      if (verification.person_data) {
+        parsedPersonData = JSON.parse(verification.person_data);
+      }
+    } catch (e) {}
+
+    try {
+      if (verification.request_data) {
+        parsedRequestData = JSON.parse(verification.request_data);
+      }
+    } catch (e) {}
+
+    try {
+      if (verification.response_data) {
+        parsedResponseData = JSON.parse(verification.response_data);
+      }
+    } catch (e) {}
+
+    res.render("admin/detail", {
+      verification,
+      personData: parsedPersonData,
+      requestData: parsedRequestData,
+      responseData: parsedResponseData,
+      adminUsername: req.session.adminUsername,
+    });
   }
+);
 
-  let parsedPersonData = null;
-  let parsedRequestData = null;
-  let parsedResponseData = null;
+// Generate human-readable PDF report for verification
+router.get(
+  "/admin/verification/:id/download",
+  adminAuth.requireAuth,
+  async (req, res) => {
+    try {
+      const sessionId = req.params.id;
+      const verification = await database.getVerificationBySessionId(sessionId);
 
-  try {
-    if (verification.person_data) {
-      parsedPersonData = JSON.parse(verification.person_data);
+      if (!verification) {
+        res.status(404).send("Verification not found");
+        return;
+      }
+
+      let personData = null;
+      let responseData = null;
+
+      try {
+        if (verification.person_data) {
+          personData = JSON.parse(verification.person_data);
+        }
+      } catch (e) {}
+
+      try {
+        if (verification.response_data) {
+          responseData = JSON.parse(verification.response_data);
+        }
+      } catch (e) {}
+
+      // Create PDF document
+      const doc = new PDFDocument({ 
+        margin: 50,
+        size: 'A4',
+        info: {
+          Title: `Verification Report - ${verification.name}`,
+          Author: "M'Cube Plus Verification System",
+          Subject: "Identity Verification Report"
+        }
+      });
+
+      // Set response headers for PDF download
+      const filename = `verification_report_${verification.name.replace(/[^a-zA-Z0-9]/g, "_")}_${verification.session_id.substring(0, 8)}.pdf`;
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      
+      // Pipe the PDF to the response
+      doc.pipe(res);
+
+      // Colors
+      const primaryColor = '#b47b18';
+      const successColor = '#10b981';
+      const errorColor = '#ef4444';
+      const grayColor = '#6b7280';
+      const darkColor = '#1f2937';
+
+      // Helper function to add a section header
+      const addSectionHeader = (text, icon = '') => {
+        doc.moveDown(0.5);
+        doc.fontSize(14).fillColor(primaryColor).font('Helvetica-Bold');
+        doc.text(`${icon} ${text}`.trim(), { underline: false });
+        doc.moveDown(0.3);
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke(primaryColor);
+        doc.moveDown(0.5);
+        doc.fillColor(darkColor).font('Helvetica');
+      };
+
+      // Helper function to add a field row
+      const addField = (label, value, indent = 0) => {
+        if (value && value !== 'null' && value !== 'undefined') {
+          doc.fontSize(10).fillColor(grayColor).font('Helvetica-Bold');
+          doc.text(`${label}:`, 50 + indent, doc.y, { continued: true });
+          doc.fillColor(darkColor).font('Helvetica');
+          doc.text(`  ${value}`);
+          doc.moveDown(0.3);
+        }
+      };
+
+      // ===== HEADER =====
+      doc.fontSize(22).fillColor(primaryColor).font('Helvetica-Bold');
+      doc.text("Identity Verification Report", { align: 'center' });
+      doc.moveDown(0.5);
+      
+      // Status badge
+      const statusColor = verification.status === 'approved' ? successColor : errorColor;
+      const statusText = verification.status === 'approved' ? 'APPROVED' : 'FAILED';
+      doc.fontSize(16).fillColor(statusColor).font('Helvetica-Bold');
+      doc.text(statusText, { align: 'center' });
+      doc.moveDown(1);
+
+      // Report metadata
+      doc.fontSize(9).fillColor(grayColor).font('Helvetica');
+      const generatedDate = new Date().toLocaleString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+      doc.text(`Report Generated: ${generatedDate}`, { align: 'center' });
+      doc.text(`Session ID: ${verification.session_id}`, { align: 'center' });
+      doc.moveDown(1);
+
+      // ===== VERIFICATION SUMMARY =====
+      addSectionHeader('Verification Summary');
+      
+      const createdDate = new Date(verification.created_at).toLocaleString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+      
+      addField('Status', statusText);
+      addField('Verified', verification.verified || 'N/A');
+      addField('Verification Date', createdDate);
+      addField('Response Code', verification.code || 'N/A');
+      if (verification.transaction_guid) {
+        addField('Transaction ID', verification.transaction_guid);
+      }
+
+      // ===== USER INFORMATION =====
+      addSectionHeader('User Information');
+      addField('Full Name', verification.name);
+      addField('Email Address', verification.email);
+      addField('Ghana Card PIN', verification.pin_number);
+
+      // ===== ERROR DETAILS (if failed) =====
+      if (verification.status === 'failed' && responseData && (responseData.message || responseData.msg)) {
+        addSectionHeader('Error Details');
+        doc.fontSize(10).fillColor(errorColor).font('Helvetica');
+        doc.text(`Reason: ${responseData.message || responseData.msg || 'Verification failed'}`);
+        doc.fillColor(darkColor);
+      }
+
+      // ===== GHANA CARD INFORMATION (if approved) =====
+      if (personData && personData.person) {
+        const person = personData.person;
+        
+        addSectionHeader('Ghana Card Information');
+        
+        // Personal Details subsection
+        doc.fontSize(11).fillColor(primaryColor).font('Helvetica-Bold');
+        doc.text('Personal Details');
+        doc.moveDown(0.3);
+        
+        addField('National ID', person.nationalId);
+        addField('Card ID', person.cardId);
+        addField('Surname', person.surname);
+        addField('Forenames', person.forenames);
+        addField('Date of Birth', person.birthDate);
+        addField('Gender', person.gender);
+        addField('Nationality', person.nationality);
+        addField('Card Valid From', person.cardValidFrom);
+        addField('Card Valid To', person.cardValidTo);
+
+        // Addresses
+        if (person.addresses && person.addresses.length > 0) {
+          doc.moveDown(0.5);
+          doc.fontSize(11).fillColor(primaryColor).font('Helvetica-Bold');
+          doc.text('Address Information');
+          doc.moveDown(0.5);
+          
+          person.addresses.forEach((address, index) => {
+            const addressType = address.type || `Address ${index + 1}`;
+            doc.fontSize(10).fillColor(grayColor).font('Helvetica-Bold');
+            doc.text(`${addressType}:`, { underline: true });
+            doc.moveDown(0.2);
+            
+            addField('Street', address.street, 20);
+            addField('Town', address.town, 20);
+            addField('Community', address.community, 20);
+            addField('District', address.districtName, 20);
+            addField('Region', address.region, 20);
+            addField('Country', address.countryName, 20);
+            addField('Postal Code', address.postalCode, 20);
+            addField('Digital Address', address.addressDigital, 20);
+            
+            if (address.gpsAddressDetails && address.gpsAddressDetails.gpsName) {
+              addField('GPS Address', address.gpsAddressDetails.gpsName, 20);
+            }
+            doc.moveDown(0.3);
+          });
+        }
+      }
+
+      // ===== SELFIE IMAGE =====
+      if (verification.cloudinary_url) {
+        // Check if we need a new page
+        if (doc.y > 500) {
+          doc.addPage();
+        }
+        
+        addSectionHeader('Selfie Verification Image');
+        
+        try {
+          // Fetch the image from Cloudinary
+          const imageResponse = await axios.get(verification.cloudinary_url, {
+            responseType: 'arraybuffer',
+            timeout: 10000
+          });
+          
+          const imageBuffer = Buffer.from(imageResponse.data);
+          
+          // Center the image
+          const imageWidth = 200;
+          const x = (doc.page.width - imageWidth) / 2;
+          
+          doc.image(imageBuffer, x, doc.y, { 
+            width: imageWidth,
+            align: 'center'
+          });
+          doc.moveDown(1);
+          
+          doc.fontSize(9).fillColor(grayColor).font('Helvetica-Oblique');
+          doc.text('This selfie was captured during the verification process.', { align: 'center' });
+        } catch (imageError) {
+          console.error('Error fetching selfie image:', imageError.message);
+          doc.fontSize(10).fillColor(grayColor);
+          doc.text('Selfie image could not be loaded.', { align: 'center' });
+          doc.text(`Image URL: ${verification.cloudinary_url}`, { align: 'center' });
+        }
+      }
+
+      // ===== FOOTER =====
+      doc.moveDown(2);
+      doc.fontSize(8).fillColor(grayColor).font('Helvetica');
+      doc.text('─'.repeat(80), { align: 'center' });
+      doc.moveDown(0.3);
+      doc.text("This report was generated by M'Cube Plus Verification System", { align: 'center' });
+      doc.text('For questions or concerns, please contact the system administrator.', { align: 'center' });
+
+      // Finalize PDF
+      doc.end();
+
+    } catch (error) {
+      console.error("Download error:", error);
+      res.status(500).send("Error generating report");
     }
-  } catch (e) {}
-
-  try {
-    if (verification.request_data) {
-      parsedRequestData = JSON.parse(verification.request_data);
-    }
-  } catch (e) {}
-
-  try {
-    if (verification.response_data) {
-      parsedResponseData = JSON.parse(verification.response_data);
-    }
-  } catch (e) {}
-
-  res.render("admin/detail", {
-    verification,
-    personData: parsedPersonData,
-    requestData: parsedRequestData,
-    responseData: parsedResponseData,
-    adminUsername: req.session.adminUsername,
-  });
-});
+  }
+);
 
 router.get("/admin/search", adminAuth.requireAuth, async (req, res) => {
   const query = req.query.q || "";
