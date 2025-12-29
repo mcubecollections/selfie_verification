@@ -151,6 +151,25 @@ router.get(
         }
       } catch (e) {}
 
+      // Extract person data from multiple possible structures
+      // Could be at personData.person, responseData.data.person, or personData.data.person
+      let person = null;
+      let apiData = null;
+      
+      if (personData && personData.person) {
+        person = personData.person;
+        apiData = personData;
+      } else if (personData && personData.data && personData.data.person) {
+        person = personData.data.person;
+        apiData = personData.data;
+      } else if (responseData && responseData.data && responseData.data.person) {
+        person = responseData.data.person;
+        apiData = responseData.data;
+      } else if (responseData && responseData.person) {
+        person = responseData.person;
+        apiData = responseData;
+      }
+
       // Create PDF document
       const doc = new PDFDocument({ 
         margin: 50,
@@ -188,13 +207,18 @@ router.get(
         doc.fillColor(darkColor).font('Helvetica');
       };
 
-      // Helper function to add a field row
+      // Helper function to add a field row (handles missing values gracefully)
       const addField = (label, value, indent = 0) => {
-        if (value && value !== 'null' && value !== 'undefined') {
+        // Trim and clean the value
+        let cleanValue = value;
+        if (typeof value === 'string') {
+          cleanValue = value.trim();
+        }
+        if (cleanValue && cleanValue !== 'null' && cleanValue !== 'undefined' && cleanValue !== '') {
           doc.fontSize(10).fillColor(grayColor).font('Helvetica-Bold');
           doc.text(`${label}:`, 50 + indent, doc.y, { continued: true });
           doc.fillColor(darkColor).font('Helvetica');
-          doc.text(`  ${value}`);
+          doc.text(`  ${cleanValue}`);
           doc.moveDown(0.3);
         }
       };
@@ -230,18 +254,44 @@ router.get(
       });
       
       addField('Status', statusText);
-      addField('Verified', verification.verified || 'N/A');
+      addField('Verified', verification.verified || (apiData && apiData.verified) || 'N/A');
       addField('Verification Date', createdDate);
-      addField('Response Code', verification.code || 'N/A');
-      if (verification.transaction_guid) {
-        addField('Transaction ID', verification.transaction_guid);
+      addField('Response Code', verification.code || (responseData && responseData.code) || 'N/A');
+      
+      // Add transaction ID from multiple sources
+      const transactionId = verification.transaction_guid || 
+                           (apiData && apiData.transactionGuid) || 
+                           (responseData && responseData.data && responseData.data.transactionGuid);
+      if (transactionId) {
+        addField('Transaction ID', transactionId);
+      }
+
+      // Add additional API response fields
+      if (apiData) {
+        addField('Short Reference', apiData.shortGuid);
+        addField('Source', apiData.source);
+        addField('Center', apiData.center);
+        if (apiData.requestTimestamp) {
+          const reqDate = new Date(apiData.requestTimestamp).toLocaleString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+          });
+          addField('Request Time', reqDate);
+        }
+        if (apiData.responseTimestamp) {
+          const resDate = new Date(apiData.responseTimestamp).toLocaleString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+          });
+          addField('Response Time', resDate);
+        }
       }
 
       // ===== USER INFORMATION =====
       addSectionHeader('User Information');
-      addField('Full Name', verification.name);
+      addField('Full Name', verification.name || (apiData && apiData.userID));
       addField('Email Address', verification.email);
-      addField('Ghana Card PIN', verification.pin_number);
+      addField('Ghana Card PIN', verification.pin_number || (person && person.nationalId));
 
       // ===== ERROR DETAILS (if failed) =====
       if (verification.status === 'failed' && responseData && (responseData.message || responseData.msg)) {
@@ -251,9 +301,8 @@ router.get(
         doc.fillColor(darkColor);
       }
 
-      // ===== GHANA CARD INFORMATION (if approved) =====
-      if (personData && personData.person) {
-        const person = personData.person;
+      // ===== GHANA CARD INFORMATION (if person data available) =====
+      if (person) {
         
         addSectionHeader('Ghana Card Information');
         
